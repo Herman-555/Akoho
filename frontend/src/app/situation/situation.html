@@ -1,0 +1,201 @@
+<div class="container">
+  <h2>Situation du lot</h2>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  @if (warning()) {
+    <p class="warning">{{ warning() }}</p>
+  }
+
+  <form (ngSubmit)="onSearch()" class="form">
+    <div class="form-row">
+      <label>Sélectionner un lot</label>
+      <select [(ngModel)]="selectedLotId" name="selectedLotId" (change)="onLotSelected()">
+        <option value="">-- Choisir un lot --</option>
+        <option value="all">Tous les lots</option>
+        @for (lot of lots(); track lot.id_lot) {
+          <option [value]="lot.id_lot">
+            Lot #{{ lot.id_lot }} - Race #{{ lot.id_race }} ({{ lot.nbr_poulet }} poulets) - Créé: {{ lot.date_creation }}
+          </option>
+        }
+      </select>
+    </div>
+    <div class="form-row">
+      <label>Date de consultation</label>
+      <input type="date" [(ngModel)]="selectedDate" name="selectedDate" />
+    </div>
+    <button type="submit" [disabled]="loading()">
+      {{ loading() ? 'Calcul en cours...' : 'Calculer la situation' }}
+    </button>
+  </form>
+
+  @if (loadingAll()) {
+    <p class="loading-text">Calcul en cours pour tous les lots...</p>
+  }
+
+  @if (allSituations().length > 0) {
+    <h3>Situation de tous les lots — {{ selectedDate }}</h3>
+    <div class="table-wrapper">
+      <table class="periodic-table">
+        <thead>
+          <tr>
+            <th>Lot</th>
+            <th>Poulets</th>
+            <th>Décès</th>
+            <th>Œufs</th>
+            <th>Poids moy. (g)</th>
+            <th>Estim. poulets (Ar)</th>
+            <th>Estim. œufs (Ar)</th>
+            <th>CA Total (Ar)</th>
+            <th>Achat (Ar)</th>
+            <th>Nourriture (Ar)</th>
+            <th>Dépenses (Ar)</th>
+            <th>Bénéfice (Ar)</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of allSituations(); track row.id_lot) {
+            <tr>
+              <td>Lot #{{ row.id_lot }}</td>
+              <td>{{ row.nbr_poulet_a_date_t }}</td>
+              <td class="danger-text">{{ row.nbr_deces }}</td>
+              <td>{{ row.nbr_oeufs }}</td>
+              <td>{{ row.poids_moyen | number:'1.2-2' }}</td>
+              <td>{{ row.estimation_poulet | number }}</td>
+              <td>{{ row.estimation_oeufs | number }}</td>
+              <td>{{ row.chiffre_affaire_total | number }}</td>
+              <td>{{ row.prix_achat_akoho | number }}</td>
+              <td>{{ row.prix_sakafo | number }}</td>
+              <td>{{ row.depense_total | number }}</td>
+              <td [class.positive-text]="row.benefice_total >= 0" [class.negative-text]="row.benefice_total < 0">
+                {{ row.benefice_total | number }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (situation()) {
+    <h3>Lot #{{ situation()!.id_lot }} — {{ situation()!.date_consultation }}</h3>
+
+    <div class="stats-bar">
+      <div class="stat">
+        <span class="stat-value">{{ situation()!.nbr_poulet_a_date_t }}</span>
+        <span class="stat-label">Poulets</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value danger">{{ situation()!.nbr_deces }}</span>
+        <span class="stat-label">Décès</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value">{{ situation()!.nbr_oeufs }}</span>
+        <span class="stat-label">Œufs</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value">{{ situation()!.poids_moyen | number:'1.2-2' }} g</span>
+        <span class="stat-label">Poids moy.</span>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="section">
+        <h4 class="section-title ca-title">Chiffre d'affaire</h4>
+        <div class="detail-row">
+          <span>Estimation poulets</span>
+          <strong>{{ situation()!.estimation_poulet | number }} Ar</strong>
+        </div>
+        <div class="detail-row">
+          <span>Estimation œufs</span>
+          <strong>{{ situation()!.estimation_oeufs | number }} Ar</strong>
+        </div>
+        <div class="detail-row total ca-total">
+          <span>CA Total</span>
+          <strong>{{ situation()!.chiffre_affaire_total | number }} Ar</strong>
+        </div>
+      </div>
+
+      <div class="section">
+        <h4 class="section-title dep-title">Dépenses</h4>
+        <div class="detail-row">
+          <span>Prix achat (Akoho)</span>
+          <strong>{{ situation()!.prix_achat_akoho | number }} Ar</strong>
+        </div>
+        <div class="detail-row">
+          <span>Prix nourriture (Sakafo)</span>
+          <strong>{{ situation()!.prix_sakafo | number }} Ar</strong>
+        </div>
+        <div class="detail-row total dep-total">
+          <span>Dépense Totale</span>
+          <strong>{{ situation()!.depense_total | number }} Ar</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="bilan-bar" [class.positive]="situation()!.benefice_total >= 0" [class.negative]="situation()!.benefice_total < 0">
+      <span class="bilan-label">Bénéfice total</span>
+      <span class="bilan-value">{{ situation()!.benefice_total | number }} Ar</span>
+    </div>
+
+    <!-- Tableau périodique -->
+    <div class="periodic-section">
+      <div class="periodic-header">
+        <h4>Évolution périodique</h4>
+        <select [(ngModel)]="selectedPeriod" name="selectedPeriod" (change)="onPeriodChange()" class="period-select">
+          <option value="jour">Par jour</option>
+          <option value="semaine">Par semaine</option>
+        </select>
+      </div>
+
+      @if (loadingPeriodic()) {
+        <p class="loading-text">Chargement des données périodiques...</p>
+      }
+
+      @if (periodicData().length > 0) {
+        <div class="table-wrapper">
+          <table class="periodic-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Poulets</th>
+                <th>Décès</th>
+                <th>Œufs</th>
+                <th>Poids moy. (g)</th>
+                <th>Estim. poulets (Ar)</th>
+                <th>Estim. œufs (Ar)</th>
+                <th>CA Total (Ar)</th>
+                <th>Achat (Ar)</th>
+                <th>Nourriture (Ar)</th>
+                <th>Dépenses (Ar)</th>
+                <th>Bénéfice (Ar)</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of periodicData(); track row.date_consultation; let last = $last) {
+                <tr [class.final-row]="last">
+                  <td>{{ row.date_consultation }}</td>
+                  <td>{{ row.nbr_poulet_a_date_t }}</td>
+                  <td class="danger-text">{{ row.nbr_deces }}</td>
+                  <td>{{ row.nbr_oeufs }}</td>
+                  <td>{{ row.poids_moyen | number:'1.2-2' }}</td>
+                  <td>{{ row.estimation_poulet | number }}</td>
+                  <td>{{ row.estimation_oeufs | number }}</td>
+                  <td>{{ row.chiffre_affaire_total | number }}</td>
+                  <td>{{ row.prix_achat_akoho | number }}</td>
+                  <td>{{ row.prix_sakafo | number }}</td>
+                  <td>{{ row.depense_total | number }}</td>
+                  <td [class.positive-text]="row.benefice_total >= 0" [class.negative-text]="row.benefice_total < 0">
+                    {{ row.benefice_total | number }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  }
+</div>
