@@ -5,7 +5,7 @@ function createSituationRoutes(situationController) {
 
   router.get('/', (req, res, next) => situationController.getSituation(req, res, next));
   router.get('/all', (req, res, next) => situationController.getAllSituations(req, res, next));
-  router.get('/periodic', (req, res, next) => situationController.getPeriodicSituation(req, res, next));
+  router.get('/poids-race', (req, res, next) => situationController.getPoidsAkoho(req, res, next));
 
   return router;
 }

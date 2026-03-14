@@ -3,9 +3,14 @@ const sql = Database.sql;
 
 class Lot {
   static async findAll(pool) {
-    const result = await pool.request().query(
-      'SELECT l.*, r.nom_race FROM lot l LEFT JOIN race r ON l.id_race = r.id_race ORDER BY l.id_lot'
-    );
+    const result = await pool.request().query(`
+      SELECT l.*, r.nom_race, r.male AS male_pct, r.femelle AS femelle_pct,
+        CASE WHEN l.id_couverture IS NULL THEN 0
+             ELSE ROUND(l.nbr_poulet * r.male / 100.0, 0) END AS nbr_males,
+        CASE WHEN l.id_couverture IS NULL THEN l.nbr_poulet
+             ELSE ROUND(l.nbr_poulet * r.femelle / 100.0, 0) END AS nbr_femelles
+      FROM lot l LEFT JOIN race r ON l.id_race = r.id_race ORDER BY l.id_lot
+    `);
     return result.recordset;
   }
 
@@ -13,9 +18,14 @@ class Lot {
     const result = await pool
       .request()
       .input('id', sql.Int, id)
-      .query(
-        'SELECT l.*, r.nom_race FROM lot l LEFT JOIN race r ON l.id_race = r.id_race WHERE l.id_lot = @id'
-      );
+      .query(`
+        SELECT l.*, r.nom_race, r.male AS male_pct, r.femelle AS femelle_pct,
+          CASE WHEN l.id_couverture IS NULL THEN 0
+               ELSE ROUND(l.nbr_poulet * r.male / 100.0, 0) END AS nbr_males,
+          CASE WHEN l.id_couverture IS NULL THEN l.nbr_poulet
+               ELSE ROUND(l.nbr_poulet * r.femelle / 100.0, 0) END AS nbr_femelles
+        FROM lot l LEFT JOIN race r ON l.id_race = r.id_race WHERE l.id_lot = @id
+      `);
     return result.recordset[0] || null;
   }
 

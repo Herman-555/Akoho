@@ -7,4 +7,6 @@ export interface Lot {
   nbr_poulet: number | null;
   id_couverture: number | null;
   poids_initial: number | null;
+  nbr_males?: number | null;
+  nbr_femelles?: number | null;
 }

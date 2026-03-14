@@ -33,19 +33,16 @@ class SituationController {
     }
   }
 
-  async getPeriodicSituation(req, res, next) {
+  async getPoidsAkoho(req, res, next) {
     try {
-      const { lotId, date, period } = req.query;
+      const { idRace, dateDebut, dateFin } = req.query;
 
-      if (!lotId || !date) {
-        return res.status(400).json({ error: 'lotId et date sont requis' });
+      if (!idRace || !dateDebut || !dateFin) {
+        return res.status(400).json({ error: 'idRace, dateDebut et dateFin sont requis' });
       }
 
-      const validPeriods = ['jour', 'semaine'];
-      const selectedPeriod = validPeriods.includes(period) ? period : 'semaine';
-
-      const results = await this.situationService.calculatePeriodicSituation(parseInt(lotId), date, selectedPeriod);
-      res.json(results);
+      const result = await this.situationService.getPoidsAkoho(parseInt(idRace), dateDebut, dateFin);
+      res.json(result);
     } catch (err) {
       next(err);
     }

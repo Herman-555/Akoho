@@ -65,7 +65,7 @@ export class DecesComponent implements OnInit {
         this.dateDeces = '';
         this.nbrDeces = null;
       },
-      error: () => this.error.set('Erreur lors de la création')
+      error: (err) => this.error.set(err?.error?.message || 'Erreur lors de la création')
     });
   }
 
@@ -88,7 +88,7 @@ export class DecesComponent implements OnInit {
       nbr_deces: this.editNbrDeces
     }).subscribe({
       next: () => { this.editingId.set(null); this.loadDeces(); },
-      error: () => this.error.set('Erreur lors de la modification')
+      error: (err) => this.error.set(err?.error?.message || 'Erreur lors de la modification')
     });
   }
 

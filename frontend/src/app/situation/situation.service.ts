@@ -17,6 +17,22 @@ export interface Situation {
   chiffre_affaire_total: number;
   depense_total: number;
   benefice_total: number;
+  // Nouveaux champs pour les œufs estimatifs restants
+  males_actuels?: number;
+  femelles_actuelles?: number;
+  capacite_ponte_totale?: number;
+  oeufs_produits?: number;
+  oeufs_restants_estimatifs?: number;
+  perte?: number;
+  perte_valeur?: number;
+}
+
+export interface PoidsRaceResult {
+  id_race: number;
+  date_debut: string;
+  date_fin: string;
+  poids: number;
+  age_jours: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -39,13 +55,9 @@ export class SituationService {
     });
   }
 
-  getPeriodicSituation(lotId: number, date: string, period: 'jour' | 'semaine'): Observable<Situation[]> {
-    return this.http.get<Situation[]>(`${this.apiUrl}/periodic`, {
-      params: {
-        lotId: lotId.toString(),
-        date: date,
-        period: period
-      }
+  getPoidsAkoho(idRace: number, dateDebut: string, dateFin: string): Observable<PoidsRaceResult> {
+    return this.http.get<PoidsRaceResult>(`${this.apiUrl}/poids-race`, {
+      params: { idRace: idRace.toString(), dateDebut, dateFin }
     });
   }
 }

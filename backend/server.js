@@ -51,7 +51,11 @@ async function start() {
   const oeufsService = new OeufsService(pool);
   const couvertureOeufsService = new CouvertureOeufsService(pool);
   const eclosionOeufsService = new EclosionOeufsService(pool);
-  const situationService = new SituationService(pool);
+  const situationService = new SituationService(pool, {
+    nutritionService,
+    decesService,
+    oeufsService
+  });
 
   // Instantiate controllers
   const raceController = new RaceController(raceService);

@@ -5,4 +5,6 @@ export interface Deces {
   nbr_deces: number | null;
   nbr_poulet?: number | null;
   nom_race?: string | null;
+  deces_males?: number | null;
+  deces_femelles?: number | null;
 }

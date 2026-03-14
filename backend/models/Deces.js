@@ -4,7 +4,8 @@ const sql = Database.sql;
 class Deces {
   static async findAll(pool) {
     const result = await pool.request().query(
-      `SELECT d.*, l.nbr_poulet, r.nom_race
+      `SELECT d.*, l.nbr_poulet, r.nom_race,
+              r.male, r.femelle, r.deces_male, r.deces_femelle, l.id_couverture
        FROM deces d
        JOIN lot l ON d.id_lot = l.id_lot
        JOIN race r ON l.id_race = r.id_race
@@ -18,7 +19,8 @@ class Deces {
       .request()
       .input('id', sql.Int, id)
       .query(
-        `SELECT d.*, l.nbr_poulet, r.nom_race
+        `SELECT d.*, l.nbr_poulet, r.nom_race,
+                r.male, r.femelle, r.deces_male, r.deces_femelle, l.id_couverture
          FROM deces d
          JOIN lot l ON d.id_lot = l.id_lot
          JOIN race r ON l.id_race = r.id_race

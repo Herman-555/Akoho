@@ -26,6 +26,34 @@
       <label>Prix nourriture</label>
       <input type="number" [(ngModel)]="prixNourriture" name="prixNourriture" />
     </div>
+    <div class="form-row">
+      <label>Pourcentage mâle (%)</label>
+      <input type="number" step="0.01" max="100" [(ngModel)]="male" name="male" />
+    </div>
+    <div class="form-row">
+      <label>Pourcentage femelle (%)</label>
+      <input type="number" step="0.01" max="100" [(ngModel)]="femelle" name="femelle" />
+    </div>
+    <div class="form-row">
+      <label>Nombre de jours d'éclosion</label>
+      <input type="number" [(ngModel)]="nbJoursEclosion" name="nbJoursEclosion" />
+    </div>
+    <div class="form-row">
+      <label>Capacité de ponte</label>
+      <input type="number" [(ngModel)]="capacitePonte" name="capacitePonte" />
+    </div>
+    <div class="form-row">
+      <label>Pourcentage œufs pourris (%)</label>
+      <input type="number" step="0.01" max="100" [(ngModel)]="oeufsPourris" name="oeufsPourris" />
+    </div>
+    <div class="form-row">
+      <label>Décès mâle (%)</label>
+      <input type="number" step="0.01" max="100" [(ngModel)]="decesMale" name="decesMale" />
+    </div>
+    <div class="form-row">
+      <label>Décès femelle (%)</label>
+      <input type="number" step="0.01" max="100" [(ngModel)]="decesFemelle" name="decesFemelle" />
+    </div>
     <button type="submit">Ajouter</button>
   </form>
 
@@ -38,6 +66,13 @@
         <th>Prix de vente</th>
         <th>Prix oeuf</th>
         <th>Prix nourriture</th>
+        <th>Mâle (%)</th>
+        <th>Femelle (%)</th>
+        <th>Jours éclosion</th>
+        <th>Capacité ponte</th>
+        <th>Œufs pourris (%)</th>
+        <th>Décès mâle (%)</th>
+        <th>Décès femelle (%)</th>
         <th>Actions</th>
       </tr>
     </thead>
@@ -50,6 +85,13 @@
             <td><input type="number" [(ngModel)]="editPrixVente" name="editPrixVente" class="edit-input" /></td>
             <td><input type="number" [(ngModel)]="editPrixOeuf" name="editPrixOeuf" class="edit-input" /></td>
             <td><input type="number" [(ngModel)]="editPrixNourriture" name="editPrixNourriture" class="edit-input" /></td>
+            <td><input type="number" step="0.01" max="100" [(ngModel)]="editMale" name="editMale" class="edit-input" /></td>
+            <td><input type="number" step="0.01" max="100" [(ngModel)]="editFemelle" name="editFemelle" class="edit-input" /></td>
+            <td><input type="number" [(ngModel)]="editNbJoursEclosion" name="editNbJoursEclosion" class="edit-input" /></td>
+            <td><input type="number" [(ngModel)]="editCapacitePonte" name="editCapacitePonte" class="edit-input" /></td>
+            <td><input type="number" step="0.01" max="100" [(ngModel)]="editOeufsPourris" name="editOeufsPourris" class="edit-input" /></td>
+            <td><input type="number" step="0.01" max="100" [(ngModel)]="editDecesMale" name="editDecesMale" class="edit-input" /></td>
+            <td><input type="number" step="0.01" max="100" [(ngModel)]="editDecesFemelle" name="editDecesFemelle" class="edit-input" /></td>
             <td class="actions">
               <button type="button" class="btn-save" (click)="onSaveEdit(race.id_race)">Enregistrer</button>
               <button type="button" class="btn-cancel" (click)="onCancelEdit()">Annuler</button>
@@ -62,6 +104,13 @@
             <td>{{ race.prix_vente }}</td>
             <td>{{ race.prix_oeuf }}</td>
             <td>{{ race.prix_nourriture }}</td>
+            <td>{{ race.male }}%</td>
+            <td>{{ race.femelle }}%</td>
+            <td>{{ race.nb_jours_eclosion }}</td>
+            <td>{{ race.capacite_ponte }}</td>
+            <td>{{ race.oeufs_pourris }}%</td>
+            <td>{{ race.deces_male }}%</td>
+            <td>{{ race.deces_femelle }}%</td>
             <td class="actions">
               <button type="button" class="btn-edit" (click)="onEdit(race)">Modifier</button>
               <button type="button" class="btn-delete" (click)="onDelete(race.id_race)">Supprimer</button>

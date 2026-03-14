@@ -1,0 +1,37 @@
+Ajouter dans race les colonnes suivantes :
+    male, (supposee etre des pourcentages)
+    femelle,
+    nb_jours_eclosion,
+    capacite_ponte, (int)
+    oeufs_pourris (pourcentages aussi)
+
+Modifier l'interface crud dans la race en ayant une formulaire d'insertion des pourcentages, capacitepontes, purcentage ouefs pourris, nb jours...
+
+Logique insertion lot par interface :
+    Le lot inseree est femelle seulement mais pas de male,
+    on s'en servira pour savoir les oeufs ensuite
+
+Logique oeufs, eclosion et situation:
+    On automatise la couverture et eclosion,
+    La couverture des oeufs dateront le lendemain de la date de laquelle on obtient les oeufs,
+    On prend le nb_jours_eclosion pour compter lequel des dates l'oeuf sera eclos automatiquement 
+par exemple recu le 1 pour 3 jours avant eclosion et donc jour 1 sera le 2 et le 3eme jour censee de l'eclosion est le 4,
+    L'estimation oeuf sera un select des oeufs qui ne sont pas encore eclos (qu'elles soient en couverture ou pas),
+    L'insertion d'oeeufs suivra la contrainte de capacite_ponte (
+        prendre les femelles par une formule, puis multiplier par la capacite_ponte ce nmobre et donc on ne peut depasser ce quota pour les insertions
+        cumulees d'oeufs, adapter aussi pour les cas de deces, meme apres deces, les pourcentages restent celui des donnees, les arrondissements a virgule tu decides le bon choix a faire)
+    On affiche dans la situation le nombre d'oeufs estimatifs restants qu'on peut obtenir en fonction des dates et nombres poules et tout,
+    On affiche la valeur des oeufs pourries intitulee "perte" (en fonction de la date aussi par rapport a l'eclosion dans le tableau )
+    avec le nouveau lot qui doit etre avec eux mais pas ceux des predecesseurs
+    (ca affecte les valeurs finales et en meme temps a afficher)
+
+Logique deces :
+    Soit d la date de deces des m dans n poulets : Les n poulets mangent tous ce jour d avant que les m ne meurent,
+    modifier le calcul alors 
+
+Interface situation :
+    Mettre en premiere option "tous les lots" , 
+    Enlever l'affichage d'evolution de situation jusqu'a ce jour , le truc du par semaine ou par mois aussi , 
+    Mettre l'affichage des situations en tableau seulement (que ce soit si on choisit tous les lots ou seulement un lot)
+
+7:48 vocal record

@@ -61,6 +61,29 @@ class Oeufs {
       .query('DELETE FROM oeufs OUTPUT DELETED.* WHERE id_lot_oeufs=@id');
     return result.recordset[0] || null;
   }
+
+  // Méthode pour obtenir les œufs non éclos (estimation)
+  static async findNonEclos(pool) {
+    const result = await pool.request().query(
+      `SELECT o.*, l.id_race, r.nom_race, r.nb_jours_eclosion,
+        co.id_couverture, co.date_couverture,
+        DATEADD(day, r.nb_jours_eclosion - 1, co.date_couverture) AS date_eclosion_prevue,
+        CASE
+          WHEN co.id_couverture IS NULL THEN 'Non couvert'
+          WHEN ee.id_eclosion IS NOT NULL THEN 'Éclos'
+          WHEN DATEADD(day, r.nb_jours_eclosion - 1, co.date_couverture) <= GETDATE() THEN 'Éclosion prévue'
+          ELSE 'En couverture'
+        END AS statut
+       FROM oeufs o
+       JOIN lot l ON o.id_lot = l.id_lot
+       JOIN race r ON l.id_race = r.id_race
+       LEFT JOIN couverture_oeufs co ON o.id_lot_oeufs = co.id_lot_oeufs
+       LEFT JOIN eclosion_oeufs ee ON co.id_couverture = ee.id_couverture
+       WHERE ee.id_eclosion IS NULL
+       ORDER BY o.date_recensement DESC`
+    );
+    return result.recordset;
+  }
 }
 
 module.exports = Oeufs;

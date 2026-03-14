@@ -1,0 +1,52 @@
+<div class="container">
+  <h2>Poids moyen par race</h2>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  <form (ngSubmit)="onSearch()" class="form">
+    <div class="form-row">
+      <label>Race</label>
+      <select [(ngModel)]="selectedRaceId" name="selectedRaceId">
+        <option value="">-- Choisir une race --</option>
+        @for (race of races(); track race.id_race) {
+          <option [value]="race.id_race">{{ race.nom_race }}</option>
+        }
+      </select>
+    </div>
+    <div class="form-row">
+      <label>Date début</label>
+      <input type="date" [(ngModel)]="dateDebut" name="dateDebut" />
+    </div>
+    <div class="form-row">
+      <label>Date fin</label>
+      <input type="date" [(ngModel)]="dateFin" name="dateFin" />
+    </div>
+    <button type="submit" [disabled]="loading()">
+      {{ loading() ? 'Calcul en cours...' : 'Calculer le poids' }}
+    </button>
+  </form>
+
+  @if (result()) {
+    <div class="result-card">
+      <h3>{{ getRaceName() }}</h3>
+      <p class="date-range">Du {{ result()!.date_debut }} au {{ result()!.date_fin }}</p>
+
+      <div class="stats-bar">
+        <div class="stat">
+          <span class="stat-value">{{ result()!.poids | number:'1.2-2' }} g</span>
+          <span class="stat-label">Poids estimé</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">{{ result()!.age_jours }}</span>
+          <span class="stat-label">Jours</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">{{ (result()!.age_jours / 7) | number:'1.0-0' }}</span>
+          <span class="stat-label">Semaines</span>
+        </div>
+      </div>
+    </div>
+  }
+</div>

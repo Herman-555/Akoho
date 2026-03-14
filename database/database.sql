@@ -62,3 +62,26 @@ GO
 -- ALTER TABLE to add poids_initial column
 ALTER TABLE lot ADD poids_initial DECIMAL(10,2) NOT NULL DEFAULT 0;
 GO
+
+-- ALTER TABLE to add gender percentage columns, incubation days, laying capacity and rotten eggs percentage
+ALTER TABLE race ADD male DECIMAL(5,2) NOT NULL DEFAULT 0;
+GO
+
+ALTER TABLE race ADD femelle DECIMAL(5,2) NOT NULL DEFAULT 0;
+GO
+
+ALTER TABLE race ADD nb_jours_eclosion INT NOT NULL DEFAULT 0;
+GO
+
+ALTER TABLE race ADD capacite_ponte INT NOT NULL DEFAULT 0;
+GO
+
+ALTER TABLE race ADD oeufs_pourris DECIMAL(5,2) NOT NULL DEFAULT 0;
+GO
+
+-- ALTER TABLE to add death percentage columns per gender
+ALTER TABLE race ADD deces_male DECIMAL(5,2) NOT NULL DEFAULT 50;
+GO
+
+ALTER TABLE race ADD deces_femelle DECIMAL(5,2) NOT NULL DEFAULT 50;
+GO

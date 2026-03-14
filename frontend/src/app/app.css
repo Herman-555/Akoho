@@ -14,6 +14,18 @@
   padding: 1rem 2rem;
 }
 
+.app-header {
+  background-color: #333;
+  color: #fff;
+  padding: 14px 24px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
 h1 {
   font-size: 2rem;
   color: #333;

@@ -7,6 +7,7 @@ import { OeufsComponent } from './oeufs/oeufs';
 import { CouvertureOeufsComponent } from './couverture-oeufs/couverture-oeufs';
 import { EclosionOeufsComponent } from './eclosion-oeufs/eclosion-oeufs';
 import { SituationComponent } from './situation/situation';
+import { PoidsRaceComponent } from './poids-race/poids-race';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'race', pathMatch: 'full' },
@@ -17,5 +18,6 @@ export const routes: Routes = [
   { path: 'oeufs', component: OeufsComponent },
   { path: 'couverture-oeufs', component: CouvertureOeufsComponent },
   { path: 'eclosion-oeufs', component: EclosionOeufsComponent },
-  { path: 'situation', component: SituationComponent }
+  { path: 'situation', component: SituationComponent },
+  { path: 'poids-race', component: PoidsRaceComponent }
 ];

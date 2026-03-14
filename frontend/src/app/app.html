@@ -1,5 +1,6 @@
 <main class="main">
   <div class="content">
+    <header class="app-header">{{ etu }}</header>
     <h1>{{ title() }}</h1>
     <nav class="nav">
       <a routerLink="/race" routerLinkActive="active">Races</a>
@@ -10,6 +11,7 @@
       <a routerLink="/couverture-oeufs" routerLinkActive="active">Couverture Oeufs</a>
       <a routerLink="/eclosion-oeufs" routerLinkActive="active">Éclosion Oeufs</a>
       <a routerLink="/situation" routerLinkActive="active">Situation</a>
+      <a routerLink="/poids-race" routerLinkActive="active">Poids Race</a>
     </nav>
     <router-outlet />
   </div>

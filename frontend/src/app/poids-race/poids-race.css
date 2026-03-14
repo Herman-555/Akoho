@@ -10,28 +10,12 @@ h2 {
   font-size: 20px;
 }
 
-h3 {
-  color: #555;
-  margin: 12px 0 10px 0;
-  font-size: 15px;
-}
-
 .error {
   background-color: #ffebee;
   color: #c62828;
   padding: 8px 12px;
   border-radius: 4px;
   margin-bottom: 10px;
-  font-size: 13px;
-}
-
-.warning {
-  background-color: #fff3e0;
-  color: #e65100;
-  padding: 8px 12px;
-  border-radius: 4px;
-  margin-bottom: 10px;
-  border-left: 4px solid #ff9100;
   font-size: 13px;
 }
 
@@ -51,7 +35,7 @@ h3 {
   flex-direction: column;
   gap: 3px;
   flex: 1;
-  min-width: 180px;
+  min-width: 160px;
 }
 
 .form-row label {
@@ -96,75 +80,52 @@ button:disabled {
   cursor: not-allowed;
 }
 
-.table-wrapper {
+.result-card {
+  background: #fff;
   border: 1px solid #e0e0e0;
   border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.periodic-table {
-  width: 100%;
-  border-collapse: collapse;
+.result-card h3 {
+  margin: 0 0 4px 0;
+  color: #333;
+  font-size: 16px;
+}
+
+.date-range {
+  color: #888;
   font-size: 13px;
-  table-layout: fixed;
+  margin: 0 0 14px 0;
 }
 
-.periodic-table thead {
+.stats-bar {
+  display: flex;
+  gap: 10px;
+}
+
+.stat {
+  flex: 1;
   background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 12px 8px;
+  text-align: center;
 }
 
-.periodic-table th {
-  padding: 8px 6px;
-  text-align: right;
-  font-weight: 600;
-  color: #555;
-  border-bottom: 2px solid #e0e0e0;
+.stat-value {
+  display: block;
+  font-size: 24px;
+  font-weight: 700;
+  color: #2e7d32;
+}
+
+.stat-label {
+  display: block;
   font-size: 11px;
+  color: #888;
   text-transform: uppercase;
   letter-spacing: 0.3px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.periodic-table th:first-child {
-  text-align: left;
-}
-
-.periodic-table td {
-  padding: 6px;
-  text-align: right;
-  color: #333;
-  border-bottom: 1px solid #f0f0f0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.periodic-table td:first-child {
-  text-align: left;
-  font-weight: 500;
-}
-
-.periodic-table tbody tr:hover {
-  background: #f9f9f9;
-}
-
-.danger-text {
-  color: #e53935;
-}
-
-.positive-text {
-  color: #2e7d32;
-  font-weight: 600;
-}
-
-.negative-text {
-  color: #c62828;
-  font-weight: 600;
-}
-
-.info-text {
-  color: #1976d2;
-  font-weight: 600;
+  margin-top: 4px;
 }

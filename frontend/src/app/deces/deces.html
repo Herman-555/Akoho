@@ -38,6 +38,8 @@
         <th>Race</th>
         <th>Date décès</th>
         <th>Nbr décès</th>
+        <th>Mâles morts</th>
+        <th>Femelles mortes</th>
         <th>Actions</th>
       </tr>
     </thead>
@@ -56,6 +58,8 @@
             <td>-</td>
             <td><input type="date" [(ngModel)]="editDateDeces" name="editDateDeces" class="edit-input" /></td>
             <td><input type="number" [(ngModel)]="editNbrDeces" name="editNbrDeces" class="edit-input" min="0" /></td>
+            <td>-</td>
+            <td>-</td>
             <td class="actions">
               <button type="button" class="btn-save" (click)="onSaveEdit(d.id_deces)">Enregistrer</button>
               <button type="button" class="btn-cancel" (click)="onCancelEdit()">Annuler</button>
@@ -68,6 +72,8 @@
             <td>{{ d.nom_race }}</td>
             <td>{{ d.date_deces | date:'yyyy-MM-dd' }}</td>
             <td>{{ d.nbr_deces }}</td>
+            <td>{{ d.deces_males }}</td>
+            <td>{{ d.deces_femelles }}</td>
             <td class="actions">
               <button type="button" class="btn-edit" (click)="onEdit(d)">Modifier</button>
               <button type="button" class="btn-delete" (click)="onDelete(d.id_deces)">Supprimer</button>

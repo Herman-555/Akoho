@@ -47,6 +47,15 @@ class OeufsController {
       next(err);
     }
   }
+
+  async getEstimationNonEclos(req, res, next) {
+    try {
+      const estimation = await this.oeufsService.getEstimationNonEclos();
+      res.json(estimation);
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 module.exports = OeufsController;

@@ -26,6 +26,10 @@ class LotService {
       err.status = 400;
       throw err;
     }
+    
+    // IMPORTANT: Les lots créés via l'interface (id_couverture == null) contiennent uniquement des femelles.
+    // Les lots issus d'éclosion (id_couverture != null) ont une répartition mâle/femelle selon les % de la race.
+    
     return Lot.create(this.pool, data);
   }
 

@@ -33,6 +33,7 @@
     <div class="form-row">
       <label>Nombre de poulets</label>
       <input type="number" [(ngModel)]="nbrPoulet" name="nbrPoulet" min="1" />
+      <small style="color: #666; display: block; margin-top: 4px;">Note: Si pas de couverture, ce sont tous des femelles</small>
     </div>
 
     <div class="form-row">
@@ -51,7 +52,8 @@
         <th>Race</th>
         <th>Âge</th>
         <th>Date création</th>
-        <th>Nbr poulets</th>
+        <th>Nbr mâles</th>
+        <th>Nbr femelles</th>
         <th>Poids initial (g)</th>
         <th>ID couverture</th>
         <th>Actions</th>
@@ -77,6 +79,7 @@
               </select>
             </td>
             <td><input type="date" [(ngModel)]="editDateCreation" name="editDateCreation" class="edit-input" /></td>
+            <td>{{ lot.nbr_males ?? 0 }}</td>
             <td><input type="number" [(ngModel)]="editNbrPoulet" name="editNbrPoulet" class="edit-input" min="1" /></td>
             <td><input type="number" [(ngModel)]="editPoidsInitial" name="editPoidsInitial" class="edit-input" min="0" step="0.01" /></td>
             <td>{{ lot.id_couverture ?? 'null' }}</td>
@@ -91,7 +94,8 @@
             <td>{{ lot.nom_race }}</td>
             <td>{{ lot.age }}</td>
             <td>{{ lot.date_creation | date:'yyyy-MM-dd' }}</td>
-            <td>{{ lot.nbr_poulet }}</td>
+            <td>{{ lot.nbr_males ?? 0 }}</td>
+            <td>{{ lot.nbr_femelles ?? lot.nbr_poulet }}</td>
             <td>{{ lot.poids_initial }}</td>
             <td>{{ lot.id_couverture ?? 'null' }}</td>
             <td class="actions">
