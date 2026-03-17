@@ -64,7 +64,8 @@ class SituationService {
 
     const chiffre_affaire_total = estimation_poulet + Math.round(estimation_oeufs);
 
-    const depense_total = Math.round(prix_achat_akoho) + Math.round(prix_sakafo) + Math.round(perteValeur);
+    // const depense_total = Math.round(prix_achat_akoho) + Math.round(prix_sakafo) + Math.round(perteValeur);
+    const depense_total = Math.round(prix_achat_akoho) + Math.round(prix_sakafo);
 
     const benefice_total = chiffre_affaire_total - depense_total;
 

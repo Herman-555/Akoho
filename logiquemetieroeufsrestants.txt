@@ -1,0 +1,7 @@
+Depart 600 CapaciteReste   ; Poulets 60 ; Capacite 10
+
+Atody 100
+Reste 500
+
+Morts X
+CapaciteReste = ( CapaciteDepart -sum(Oeufs precedents)  - (capacite * X - sum(Atody pendant ce temps)/Poulets vivants avant ce nouveau mort * X ))

@@ -1,37 +1,27 @@
-Ajouter dans race les colonnes suivantes :
-    male, (supposee etre des pourcentages)
-    femelle,
-    nb_jours_eclosion,
-    capacite_ponte, (int)
-    oeufs_pourris (pourcentages aussi)
+Logique Metier du nombre d'oeufs restants :
 
-Modifier l'interface crud dans la race en ayant une formulaire d'insertion des pourcentages, capacitepontes, purcentage ouefs pourris, nb jours...
+Soit CapaciteReste = nbr_femelles_actuelles * capacite_ponte
+a une date T0 (la date de creation du lot);
+nbr_femelles_actuelles = nbr_femelles_initiales a T0.
+Soit T la date de situation.
 
-Logique insertion lot par interface :
-    Le lot inseree est femelle seulement mais pas de male,
-    on s'en servira pour savoir les oeufs ensuite
+Algorithme :
+Rechercher les deces entre T0 et T.
+Boucler chaque ligne de deces et a chaque fois on 
+recupere le nombre total SUM d'oeufs recensee entre ces dates,
 
-Logique oeufs, eclosion et situation:
-    On automatise la couverture et eclosion,
-    La couverture des oeufs dateront le lendemain de la date de laquelle on obtient les oeufs,
-    On prend le nb_jours_eclosion pour compter lequel des dates l'oeuf sera eclos automatiquement 
-par exemple recu le 1 pour 3 jours avant eclosion et donc jour 1 sera le 2 et le 3eme jour censee de l'eclosion est le 4,
-    L'estimation oeuf sera un select des oeufs qui ne sont pas encore eclos (qu'elles soient en couverture ou pas),
-    L'insertion d'oeeufs suivra la contrainte de capacite_ponte (
-        prendre les femelles par une formule, puis multiplier par la capacite_ponte ce nmobre et donc on ne peut depasser ce quota pour les insertions
-        cumulees d'oeufs, adapter aussi pour les cas de deces, meme apres deces, les pourcentages restent celui des donnees, les arrondissements a virgule tu decides le bon choix a faire)
-    On affiche dans la situation le nombre d'oeufs estimatifs restants qu'on peut obtenir en fonction des dates et nombres poules et tout,
-    On affiche la valeur des oeufs pourries intitulee "perte" (en fonction de la date aussi par rapport a l'eclosion dans le tableau )
-    avec le nouveau lot qui doit etre avec eux mais pas ceux des predecesseurs
-    (ca affecte les valeurs finales et en meme temps a afficher)
+Soit X le nombre de deces femelles (on sait deja comment marche le calcul pour les femelles et males)
+CapaciteReste = 
+( CapaciteReste
+- sum(Oeufs precedents) 
+- (CapaciteReste * X - SUM/nbr_femelles_actuelles * X ))
+ a arrondir en Math.ceil()
 
-Logique deces :
-    Soit d la date de deces des m dans n poulets : Les n poulets mangent tous ce jour d avant que les m ne meurent,
-    modifier le calcul alors 
+On decremente la valeur de nbr_femelles_actuelles ;
+On aura une nouvelle valeur de CapaciteReste aussi ;
 
-Interface situation :
-    Mettre en premiere option "tous les lots" , 
-    Enlever l'affichage d'evolution de situation jusqu'a ce jour , le truc du par semaine ou par mois aussi , 
-    Mettre l'affichage des situations en tableau seulement (que ce soit si on choisit tous les lots ou seulement un lot)
+L'idee est d'avoir comme une moyenne pour les nombres restantes estimatifs.
 
-7:48 vocal record
+Prendre en compte du deces male et femelle avec les fonctions deja creees 
+mais ne pas ajouter directement la valeur deces totale et tout.
+

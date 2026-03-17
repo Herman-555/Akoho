@@ -394,12 +394,45 @@ class DecesService {
       .request()
       .input('id_lot', sql.Int, lotId)
       .query(`
-        SELECT l.nbr_poulet, l.id_couverture, r.femelle, r.male, r.capacite_ponte, r.deces_male, r.deces_femelle
+        SELECT l.nbr_poulet, l.id_couverture, l.date_creation, r.femelle, r.male, r.capacite_ponte, r.deces_male, r.deces_femelle
         FROM lot l
         JOIN race r ON l.id_race = r.id_race
         WHERE l.id_lot = @id_lot
       `);
     return result.recordset[0] || null;
+  }
+
+  async getDecesChronologiques(lotId, dateCreation, targetDate) {
+    const result = await this.pool
+      .request()
+      .input('id_lot', sql.Int, lotId)
+      .input('date_creation', sql.Date, dateCreation)
+      .input('target_date', sql.Date, targetDate)
+      .query(`
+        SELECT d.id_deces, d.date_deces, d.nbr_deces
+        FROM deces d
+        WHERE d.id_lot = @id_lot
+          AND CAST(d.date_deces AS DATE) >= CAST(@date_creation AS DATE)
+          AND CAST(d.date_deces AS DATE) <= @target_date
+        ORDER BY d.date_deces, d.id_deces
+      `);
+    return result.recordset;
+  }
+
+  async compterOeufsEntreDates(lotId, dateDebut, dateFin) {
+    const result = await this.pool
+      .request()
+      .input('id_lot', sql.Int, lotId)
+      .input('date_debut', sql.Date, dateDebut)
+      .input('date_fin', sql.Date, dateFin)
+      .query(`
+        SELECT COALESCE(SUM(nbr_oeufs), 0) as total
+        FROM oeufs
+        WHERE id_lot = @id_lot
+          AND date_recensement >= @date_debut
+          AND date_recensement <= @date_fin
+      `);
+    return result.recordset[0].total || 0;
   }
 
   // --- Fonction principale d'estimation ---
@@ -411,22 +444,53 @@ class DecesService {
       return { femelles_actuelles: 0, males_actuels: 0, capacite_totale: 0, oeufs_produits: 0, oeufs_restants: 0 };
     }
 
-    const { nbr_poulet, id_couverture, femelle, male, capacite_ponte, deces_male, deces_femelle } = lot;
+    const { nbr_poulet, id_couverture, date_creation, femelle, male, capacite_ponte, deces_male, deces_femelle } = lot;
 
     const initial = this.repartirPouletsInitiaux(nbr_poulet, id_couverture, femelle, male);
-    const totalDeces = await this.calculateTotalDeaths(lotId, targetDate);
-    const restants = this.calculerPouletsRestants(initial.males, initial.femelles, totalDeces, deces_male, deces_femelle);
+    let femellesActuelles = initial.femelles;
+    let malesActuels = initial.males;
 
-    const capacitePonte = restants.femelles * (capacite_ponte || 0);
-    const oeufsProduits = await this.compterOeufsProduits(lotId, targetDate);
-    const oeufsRestants = Math.max(0, capacitePonte - oeufsProduits);
+    const capacitePonteInitiale = femellesActuelles * (capacite_ponte || 0);
+    let capaciteReste = capacitePonteInitiale;
+
+    const decesListe = await this.getDecesChronologiques(lotId, date_creation, targetDate);
+    const oeufsProduitsTotaux = await this.compterOeufsProduits(lotId, targetDate);
+
+    let oeufsCumules = 0;
+
+    for (const deces of decesListe) {
+      const oeufsTotalJusquIci = await this.compterOeufsEntreDates(lotId, date_creation, deces.date_deces);
+      const sumOeufs = oeufsTotalJusquIci - oeufsCumules;
+
+      const decesEffectifs = this.plafonnerDeces(deces.nbr_deces, malesActuels + femellesActuelles);
+      const { decesMales, decesFemelles } = this.calculerDecesParSexe(decesEffectifs, deces_male, deces_femelle);
+      const apres = this.appliquerDebordementDeces(malesActuels, femellesActuelles, decesMales, decesFemelles);
+      const X = femellesActuelles - apres.femelles;
+
+      if (femellesActuelles > 0 && X > 0) {
+        const moyenneParFemelle = sumOeufs / femellesActuelles;
+        const capacitePerdue = capaciteReste * X - moyenneParFemelle * X;
+        capaciteReste = Math.ceil(capaciteReste - sumOeufs - capacitePerdue);
+      } else {
+        capaciteReste = capaciteReste - sumOeufs;
+      }
+
+      capaciteReste = Math.max(0, capaciteReste);
+
+      oeufsCumules = oeufsTotalJusquIci;
+      femellesActuelles = apres.femelles;
+      malesActuels = apres.males;
+    }
+
+    const oeufsApresLastDeces = oeufsProduitsTotaux - oeufsCumules;
+    capaciteReste = Math.max(0, capaciteReste - oeufsApresLastDeces);
 
     return {
-      femelles_actuelles: restants.femelles,
-      males_actuels: restants.males,
-      capacite_totale: capacitePonte,
-      oeufs_produits: oeufsProduits,
-      oeufs_restants: oeufsRestants
+      femelles_actuelles: femellesActuelles,
+      males_actuels: malesActuels,
+      capacite_totale: capacitePonteInitiale,
+      oeufs_produits: oeufsProduitsTotaux,
+      oeufs_restants: capaciteReste
     };
   }
 }
