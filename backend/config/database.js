@@ -5,7 +5,7 @@ class Database {
 
   static #config = {
     connectionString:
-      'Driver={ODBC Driver 17 for SQL Server};Server=localhost;Database=poulet;Trusted_Connection=yes;',
+      'Driver={ODBC Driver 17 for SQL Server};Server=localhost\\SQLEXPRESS;Database=poulet;Trusted_Connection=yes;',
   };
 
   static async getPool() {

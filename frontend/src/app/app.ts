@@ -8,6 +8,6 @@ import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
   styleUrl: './app.css'
 })
 export class App {
-  protected readonly title = signal('akoho');
-  protected readonly etu = 'ETU4024';
+  protected readonly title = signal('ETU');
+  protected readonly etu = 'ETU0000';
 }
