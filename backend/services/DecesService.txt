@@ -404,7 +404,8 @@ class DecesService {
 
   // --- Fonction principale d'estimation ---
 
-  async calculateEstimatedRemainingEggs(lotId, targetDate) {
+  // Ancienne méthode - sauvegarde
+  async calculateEstimatedRemainingEggs_old(lotId, targetDate) {
     const lot = await this.getLotAvecRace(lotId);
 
     if (!lot) {
@@ -429,6 +430,125 @@ class DecesService {
       oeufs_restants: oeufsRestants
     };
   }
-}
 
+  // Nouvelle méthode avec logique itérative (comme OeufsService)
+  async calculateEstimatedRemainingEggs(lotId, targetDate) {
+    const lot = await this.getLotAvecRace(lotId);
+
+    if (!lot) {
+      return { femelles_actuelles: 0, males_actuels: 0, capacite_totale: 0, oeufs_produits: 0, oeufs_restants: 0 };
+    }
+
+    const { nbr_poulet, id_couverture, femelle, male, capacite_ponte, deces_male, deces_femelle } = lot;
+
+    // Récupérer la date de création du lot
+    const lotInfoResult = await this.pool
+      .request()
+      .input('id_lot', sql.Int, lotId)
+      .query('SELECT date_creation FROM lot WHERE id_lot = @id_lot');
+
+    const dateCreation = new Date(lotInfoResult.recordset[0].date_creation);
+    const dateSituation = new Date(targetDate);
+
+    // Calcul initial à t0
+    const initial = this.repartirPouletsInitiaux(nbr_poulet, id_couverture, femelle, male);
+    let nbrFemelles = initial.femelles;
+    let nbrMales = initial.males;
+    let capacite = nbrFemelles * (capacite_ponte || 0);
+    let dateReference = dateCreation;
+
+    // Récupérer tous les décès entre t0 et t, triés par date
+    const decesResult = await this.pool
+      .request()
+      .input('id_lot', sql.Int, lotId)
+      .input('date_creation', sql.Date, dateCreation)
+      .input('target_date', sql.Date, targetDate)
+      .query(`
+        SELECT date_deces, nbr_deces
+        FROM deces
+        WHERE id_lot = @id_lot
+          AND CAST(date_deces AS DATE) > CAST(@date_creation AS DATE)
+          AND CAST(date_deces AS DATE) <= @target_date
+        ORDER BY date_deces ASC
+      `);
+
+    const decesRecords = decesResult.recordset;
+
+    // Traiter chaque décès de manière itérative
+    for (const deces of decesRecords) {
+      const dateDeces = new Date(deces.date_deces);
+
+      // Calculer les décès par sexe à cette date
+      const { decesMales, decesFemelles } = this.calculerDecesParSexe(
+        deces.nbr_deces,
+        deces_male,
+        deces_femelle
+      );
+
+      // Appliquer le débordement pour gérer les cas où un sexe n'a plus d'individus
+      // (ex: lot avec uniquement des femelles, les décès "mâles" sont redistribués aux femelles)
+      const restants = this.appliquerDebordementDeces(nbrMales, nbrFemelles, decesMales, decesFemelles);
+
+      // Calculer le nombre réel de femelles mortes (après débordement)
+      const vraisDecesFemelles = nbrFemelles - restants.femelles;
+
+      // Sommer les œufs produits entre dateReference et dateDeces
+      const oeufsResult = await this.pool
+        .request()
+        .input('id_lot', sql.Int, lotId)
+        .input('date_ref', sql.Date, dateReference)
+        .input('date_deces', sql.Date, dateDeces)
+        .query(`
+          SELECT COALESCE(SUM(nbr_oeufs), 0) as oeufs_periode
+          FROM oeufs
+          WHERE id_lot = @id_lot
+            AND CAST(date_recensement AS DATE) > CAST(@date_ref AS DATE)
+            AND CAST(date_recensement AS DATE) <= @date_deces
+        `);
+
+      const oeufsPondus = oeufsResult.recordset[0].oeufs_periode || 0;
+
+      // Appliquer la formule: Capacite = (Capacite - OeufsPondus) * (NbrFemelles - X) / NbrFemelles
+      if (nbrFemelles > 0) {
+        capacite = ((capacite - oeufsPondus) * (nbrFemelles - vraisDecesFemelles)) / nbrFemelles;
+      }
+
+      // Mettre à jour les compteurs avec les valeurs après débordement
+      nbrFemelles = restants.femelles;
+      nbrMales = restants.males;
+      dateReference = dateDeces;
+    }
+
+    // Calculer les œufs produits après le dernier décès (ou depuis t0 si pas de décès)
+    const oeufsFinalResult = await this.pool
+      .request()
+      .input('id_lot', sql.Int, lotId)
+      .input('date_ref', sql.Date, dateReference)
+      .input('target_date', sql.Date, targetDate)
+      .query(`
+        SELECT COALESCE(SUM(nbr_oeufs), 0) as oeufs_periode
+        FROM oeufs
+        WHERE id_lot = @id_lot
+          AND CAST(date_recensement AS DATE) > CAST(@date_ref AS DATE)
+          AND CAST(date_recensement AS DATE) <= @target_date
+      `);
+
+    const oeufsPeriodeFinale = oeufsFinalResult.recordset[0].oeufs_periode || 0;
+
+    // Capacité restante finale
+    const capaciteRestante = Math.max(0, capacite - oeufsPeriodeFinale);
+
+    // Total des œufs produits pour information
+    const oeufsProduits = await this.compterOeufsProduits(lotId, targetDate);
+
+    return {
+      femelles_actuelles: Math.max(0, nbrFemelles),
+      males_actuels: Math.max(0, nbrMales),
+      capacite_totale: initial.femelles * (capacite_ponte || 0),
+      oeufs_produits: oeufsProduits,
+      oeufs_restants: Math.round(capaciteRestante)
+    };
+  }
+}
+  
 module.exports = DecesService;

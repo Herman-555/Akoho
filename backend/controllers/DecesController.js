@@ -47,6 +47,21 @@ class DecesController {
       next(err);
     }
   }
+
+  async getRemainingEggsCurrentLogic(req, res, next) {
+    try {
+      const { lotId, targetDate } = req.query;
+      if (!lotId) {
+        return res.status(400).json({ error: 'lotId est requis' });
+      }
+
+      const dateToUse = targetDate ? new Date(targetDate) : new Date();
+      const result = await this.decesService.calculateEstimatedRemainingEggs(parseInt(lotId), dateToUse);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 module.exports = DecesController;

@@ -48,6 +48,21 @@ class OeufsController {
     }
   }
 
+  async getRemainingEggsNewLogic(req, res, next) {
+    try {
+      const { lotId, targetDate } = req.query;
+      if (!lotId) {
+        return res.status(400).json({ error: 'lotId est requis' });
+      }
+
+      const dateToUse = targetDate ? new Date(targetDate) : new Date();
+      const result = await this.oeufsService.calculateRemainingEggsNewLogic(parseInt(lotId), dateToUse);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
   async getEstimationNonEclos(req, res, next) {
     try {
       const estimation = await this.oeufsService.getEstimationNonEclos();

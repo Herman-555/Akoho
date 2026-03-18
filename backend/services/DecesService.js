@@ -96,23 +96,6 @@ class DecesService {
 
       const { nbr_poulet: totalPoulets, date_creation, deces_male, deces_femelle } = lotResult.recordset[0];
 
-      // Valider que nbr_deces * deces_male/100 et nbr_deces * deces_femelle/100 sont entiers
-      if (nbr_deces > 0) {
-        const mortsMale = nbr_deces * deces_male / 100;
-        const mortsFemelle = nbr_deces * deces_femelle / 100;
-
-        if (!Number.isInteger(mortsMale)) {
-          const err = new Error(`Le nombre de décès mâles (${nbr_deces} × ${deces_male}% = ${mortsMale}) doit être un entier`);
-          err.status = 400;
-          throw err;
-        }
-        if (!Number.isInteger(mortsFemelle)) {
-          const err = new Error(`Le nombre de décès femelles (${nbr_deces} × ${deces_femelle}% = ${mortsFemelle}) doit être un entier`);
-          err.status = 400;
-          throw err;
-        }
-      }
-
       // Valider que date_deces >= date_creation du lot
       if (date_deces) {
         const dateDeces = new Date(date_deces);
@@ -167,23 +150,6 @@ class DecesService {
       }
 
       const { nbr_poulet: totalPoulets, date_creation, deces_male, deces_femelle } = lotResult.recordset[0];
-
-      // Valider que nbr_deces * deces_male/100 et nbr_deces * deces_femelle/100 sont entiers
-      if (nbr_deces > 0) {
-        const mortsMale = nbr_deces * deces_male / 100;
-        const mortsFemelle = nbr_deces * deces_femelle / 100;
-
-        if (!Number.isInteger(mortsMale)) {
-          const err = new Error(`Le nombre de décès mâles (${nbr_deces} × ${deces_male}% = ${mortsMale}) doit être un entier`);
-          err.status = 400;
-          throw err;
-        }
-        if (!Number.isInteger(mortsFemelle)) {
-          const err = new Error(`Le nombre de décès femelles (${nbr_deces} × ${deces_femelle}% = ${mortsFemelle}) doit être un entier`);
-          err.status = 400;
-          throw err;
-        }
-      }
 
       // Valider que date_deces >= date_creation du lot
       if (date_deces) {
@@ -339,10 +305,27 @@ class DecesService {
   // --- Fonctions de calcul des décès par sexe ---
 
   calculerDecesParSexe(totalDeces, pourcentageMale, pourcentageFemelle) {
-    return {
-      decesMales: Math.trunc(totalDeces * (pourcentageMale || 0) / 100),
-      decesFemelles: Math.trunc(totalDeces * (pourcentageFemelle || 0) / 100)
-    };
+    // Si uniquement des femelles (male = 0), tous les décès vont aux femelles
+    if ((pourcentageMale || 0) === 0) {
+      return {
+        decesMales: 0,
+        decesFemelles: totalDeces
+      };
+    }
+
+    // Si uniquement des mâles (femelle = 0), tous les décès vont aux mâles
+    if ((pourcentageFemelle || 0) === 0) {
+      return {
+        decesMales: totalDeces,
+        decesFemelles: 0
+      };
+    }
+
+    // Sinon, arrondi inférieur pour les mâles, le reste pour les femelles
+    const decesMales = Math.floor(totalDeces * (pourcentageMale || 0) / 100);
+    const decesFemelles = totalDeces - decesMales;
+
+    return { decesMales, decesFemelles };
   }
 
   plafonnerDeces(totalDeces, totalPoulets) {
@@ -435,9 +418,27 @@ class DecesService {
     return result.recordset[0].total || 0;
   }
 
+  async getOeufsChronologiques(lotId, dateCreation, targetDate) {
+    const result = await this.pool
+      .request()
+      .input('id_lot', sql.Int, lotId)
+      .input('date_creation', sql.Date, dateCreation)
+      .input('target_date', sql.Date, targetDate)
+      .query(`
+        SELECT o.id_lot_oeufs, o.date_recensement, o.nbr_oeufs
+        FROM oeufs o
+        WHERE o.id_lot = @id_lot
+          AND CAST(o.date_recensement AS DATE) >= CAST(@date_creation AS DATE)
+          AND CAST(o.date_recensement AS DATE) <= @target_date
+        ORDER BY o.date_recensement, o.id_lot_oeufs
+      `);
+    return result.recordset;
+  }
+
   // --- Fonction principale d'estimation ---
 
-  async calculateEstimatedRemainingEggs(lotId, targetDate) {
+  // Ancienne méthode - sauvegarde
+  async calculateEstimatedRemainingEggs_old(lotId, targetDate) {
     const lot = await this.getLotAvecRace(lotId);
 
     if (!lot) {
@@ -491,6 +492,131 @@ class DecesService {
       capacite_totale: capacitePonteInitiale,
       oeufs_produits: oeufsProduitsTotaux,
       oeufs_restants: capaciteReste
+    };
+  }
+
+  // Nouvelle méthode avec logique événementielle (morts + pontes fusionnées et triées)
+  async calculateEstimatedRemainingEggs(lotId, targetDate) {
+    const lot = await this.getLotAvecRace(lotId);
+
+    if (!lot) {
+      return { femelles_actuelles: 0, males_actuels: 0, capacite_totale: 0, oeufs_produits: 0, oeufs_restants: 0 };
+    }
+
+    const { nbr_poulet, id_couverture, date_creation, femelle, male, capacite_ponte, deces_male, deces_femelle } = lot;
+
+    // 1. Calcul initial des femelles et mâles
+    const initial = this.repartirPouletsInitiaux(nbr_poulet, id_couverture, femelle, male);
+    const initialFemelles = initial.femelles;
+    const initialMales = initial.males;
+
+    // 2. Capacité initiale
+    const capacitePonteInitiale = initialFemelles * (capacite_ponte || 0);
+
+    if (initialFemelles === 0 || capacite_ponte === 0) {
+      const oeufsProduits = await this.compterOeufsProduits(lotId, targetDate);
+      return {
+        femelles_actuelles: 0,
+        males_actuels: initialMales,
+        capacite_totale: 0,
+        oeufs_produits: oeufsProduits,
+        oeufs_restants: 0
+      };
+    }
+
+    // 3. Récupérer les décès et les œufs chronologiquement
+    const decesListe = await this.getDecesChronologiques(lotId, date_creation, targetDate);
+    const oeufsListe = await this.getOeufsChronologiques(lotId, date_creation, targetDate);
+    const oeufsProduitsTotaux = await this.compterOeufsProduits(lotId, targetDate);
+
+    // 4. Créer les événements de mort avec calcul des femelles mortes
+    const events = [];
+    let cumulativeMaleDeaths = 0;
+    let cumulativeFemaleDeaths = 0;
+
+    for (const deces of decesListe) {
+      const dateEvent = new Date(deces.date_deces);
+      dateEvent.setHours(0, 0, 0, 0);
+
+      let femaleDeath = 0;
+      let maleDeath = 0;
+
+      if (id_couverture === null) {
+        // Lot créé via interface = uniquement femelles, tous les morts sont des femelles
+        femaleDeath = deces.nbr_deces;
+      } else {
+        // Lot mixte (éclosion) : suivre les pourcentages mais plafonner
+        const totalDecesJusquIci = cumulativeMaleDeaths + cumulativeFemaleDeaths + deces.nbr_deces;
+        const expectedMaleDeathsTotal = Math.floor(totalDecesJusquIci * (deces_male || 0) / 100);
+        maleDeath = expectedMaleDeathsTotal - cumulativeMaleDeaths;
+
+        // Plafonner si on dépasse le nombre de mâles
+        if (cumulativeMaleDeaths + maleDeath > initialMales) {
+          maleDeath = Math.max(0, initialMales - cumulativeMaleDeaths);
+        }
+        femaleDeath = deces.nbr_deces - maleDeath;
+        cumulativeMaleDeaths += maleDeath;
+      }
+
+      if (femaleDeath > 0 || maleDeath > 0) {
+        events.push({
+          date: dateEvent,
+          type: 'mort',
+          nbrFemelleMorte: femaleDeath,
+          nbrMaleMort: maleDeath
+        });
+      }
+      cumulativeFemaleDeaths += femaleDeath;
+    }
+
+    // 5. Ajouter les événements de ponte
+    for (const oeuf of oeufsListe) {
+      const dateEvent = new Date(oeuf.date_recensement);
+      dateEvent.setHours(0, 0, 0, 0);
+
+      events.push({
+        date: dateEvent,
+        type: 'ponte',
+        nbrOeufs: oeuf.nbr_oeufs
+      });
+    }
+
+    // 6. Trier par date (morts AVANT pontes si même date)
+    events.sort((a, b) => {
+      const diff = a.date - b.date;
+      if (diff !== 0) return diff;
+      // Si même date, les morts passent avant les pontes
+      return a.type === 'mort' ? -1 : 1;
+    });
+
+    // 7. Calculer séquentiellement
+    let remainingCapacity = capacitePonteInitiale;
+    let femellesVivantes = initialFemelles;
+    let malesVivants = initialMales;
+
+    for (const event of events) {
+      if (event.type === 'mort') {
+        // Appliquer le pourcentage de survie à la capacité restante
+        const survivantes = femellesVivantes - event.nbrFemelleMorte;
+        if (femellesVivantes > 0) {
+          remainingCapacity = remainingCapacity * (survivantes / femellesVivantes);
+        }
+        femellesVivantes = survivantes;
+        malesVivants -= (event.nbrMaleMort || 0);
+      } else if (event.type === 'ponte') {
+        // Soustraire les oeufs pondus
+        remainingCapacity = remainingCapacity - event.nbrOeufs;
+      }
+    }
+
+    remainingCapacity = Math.max(0, remainingCapacity);
+
+    return {
+      femelles_actuelles: Math.max(0, femellesVivantes),
+      males_actuels: Math.max(0, malesVivants),
+      capacite_totale: capacitePonteInitiale,
+      oeufs_produits: oeufsProduitsTotaux,
+      oeufs_restants: Math.round(remainingCapacity)
     };
   }
 }
