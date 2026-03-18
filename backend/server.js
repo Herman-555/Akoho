@@ -48,7 +48,7 @@ async function start() {
   const lotService = new LotService(pool);
   const nutritionService = new NutritionService(pool);
   const decesService = new DecesService(pool);
-  const oeufsService = new OeufsService(pool);
+  const oeufsService = new OeufsService(pool, { decesService });
   const couvertureOeufsService = new CouvertureOeufsService(pool);
   const eclosionOeufsService = new EclosionOeufsService(pool);
   const situationService = new SituationService(pool, {

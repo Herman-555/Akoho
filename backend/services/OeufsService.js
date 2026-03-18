@@ -5,8 +5,9 @@ const Lot = require('../models/Lot');
 const sql = require('../config/database').sql;
 
 class OeufsService {
-  constructor(pool) {
+  constructor(pool, { decesService } = {}) {
     this.pool = pool;
+    this.decesService = decesService;
   }
 
   async getAll() {
@@ -412,17 +413,20 @@ class OeufsService {
   }
 
   async validateCapacitePonte(id_lot, nbr_oeufs_nouveau, date_recensement) {
-    // 1. Récupérer les infos du lot et de la race
+    // Utiliser la même méthode que SituationService pour calculer les œufs restants
+    const estimationOeufs = await this.decesService.calculateEstimatedRemainingEggs(id_lot, date_recensement);
+
+    // Récupérer le nom de la race pour le message d'erreur
     const lotResult = await this.pool
       .request()
       .input('id_lot', sql.Int, id_lot)
       .query(`
-        SELECT l.*, r.capacite_ponte, r.femelle, r.nom_race 
-        FROM lot l 
-        JOIN race r ON l.id_race = r.id_race 
+        SELECT r.nom_race, r.capacite_ponte
+        FROM lot l
+        JOIN race r ON l.id_race = r.id_race
         WHERE l.id_lot = @id_lot
       `);
-    
+
     const lot = lotResult.recordset[0];
     if (!lot) {
       const err = new Error("Lot non trouvé");
@@ -430,47 +434,12 @@ class OeufsService {
       throw err;
     }
 
-    // 2. Calculer le nombre de femelles dans le lot (en tenant compte des décès)
-    // Filtre: seulement les décès dont la date >= date_creation du lot
-    const decesResult = await this.pool
-      .request()
-      .input('id_lot', sql.Int, id_lot)
-      .input('date_recensement', sql.Date, date_recensement)
-      .query(`
-        SELECT COALESCE(SUM(d.nbr_deces), 0) as total_deces
-        FROM deces d
-        JOIN lot l ON d.id_lot = l.id_lot
-        WHERE d.id_lot = @id_lot
-          AND CAST(d.date_deces AS DATE) >= CAST(l.date_creation AS DATE)
-          AND d.date_deces <= @date_recensement
-      `);
-    
-    const totalDeces = decesResult.recordset[0]?.total_deces || 0;
-    const nbrPouletsVivants = lot.nbr_poulet - totalDeces;
-    const pourcentageFemelle = lot.femelle || 50; // Si pas défini, on assume 50%
-    const nbrFemelles = Math.round((nbrPouletsVivants * pourcentageFemelle) / 100);
-
-    // 3. Calculer la capacité totale de ponte
-    const capaciteTotale = nbrFemelles * (lot.capacite_ponte || 0);
-
-    // 4. Vérifier les œufs déjà produits par ce lot
-    const oeufsExistantsResult = await this.pool
-      .request()
-      .input('id_lot', sql.Int, id_lot)
-      .query(`
-        SELECT COALESCE(SUM(o.nbr_oeufs), 0) as total_oeufs_existants
-        FROM oeufs o 
-        WHERE o.id_lot = @id_lot
-      `);
-    
-    const totalOeufsExistants = oeufsExistantsResult.recordset[0]?.total_oeufs_existants || 0;
-    
-    // 5. Validation
-    if (capaciteTotale > 0 && (totalOeufsExistants + nbr_oeufs_nouveau) > capaciteTotale) {
+    // Validation : le nombre d'œufs à ajouter ne doit pas dépasser les œufs restants
+    if (nbr_oeufs_nouveau > estimationOeufs.oeufs_restants) {
       const err = new Error(
         `Capacité de ponte dépassée pour la race ${lot.nom_race}. ` +
-        `Capacité: ${capaciteTotale} œufs (${nbrFemelles} femelles × ${lot.capacite_ponte}). ` +
-        `Déjà produit: ${totalOeufsExistants}, tentative d'ajout: ${nbr_oeufs_nouveau}`
+        `Capacité totale: ${estimationOeufs.capacite_totale} œufs (${estimationOeufs.femelles_actuelles} femelles × ${lot.capacite_ponte}). ` +
+        `Déjà produit: ${estimationOeufs.oeufs_produits}, restants: ${estimationOeufs.oeufs_restants}, tentative d'ajout: ${nbr_oeufs_nouveau}`
       );
       err.status = 400;
       throw err;
