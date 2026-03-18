@@ -85,3 +85,5 @@ GO
 
 ALTER TABLE race ADD deces_femelle DECIMAL(5,2) NOT NULL DEFAULT 50;
 GO
+
+ALTER TABLE race ADD prix_vente_male DECIMAL(10, 2) NULL;

@@ -298,7 +298,20 @@ class DecesService {
       };
     }
     const totalPoulets = this.entierPositif(nbrPoulet);
-    const [femelles, males] = this.repartirEntier(totalPoulets, [pourcentageFemelle || 0, pourcentageMale || 0]);
+    const pctFemelle = pourcentageFemelle || 0;
+    const pctMale = pourcentageMale || 0;
+    const sommePct = pctFemelle + pctMale;
+
+    if (sommePct === 0) {
+      return { femelles: 0, males: 0 };
+    }
+
+    // === BLOC FEMELLES (floor) ===
+    const femelles = Math.floor(totalPoulets * pctFemelle / sommePct);
+
+    // === BLOC MALES (ceil = reste après floor femelles) ===
+    const males = totalPoulets - femelles;
+
     return { femelles, males };
   }
 

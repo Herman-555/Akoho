@@ -47,6 +47,8 @@
             <th>Œufs restants</th>
             <th>Perte</th>
             <th>Poids moy. (g)</th>
+            <th>Estim. femelles (Ar)</th>
+            <th>Estim. mâles (Ar)</th>
             <th>Estim. poulets (Ar)</th>
             <th>Estim. œufs (Ar)</th>
             <th>CA Total (Ar)</th>
@@ -68,6 +70,8 @@
               <td class="info-text">{{ row.oeufs_restants_estimatifs ?? 0 }}</td>
               <td class="danger-text">{{ row.perte ?? 0 }}</td>
               <td>{{ row.poids_moyen | number:'1.2-2' }}</td>
+              <td>{{ row.estimation_femelles | number }}</td>
+              <td>{{ row.estimation_males | number }}</td>
               <td>{{ row.estimation_poulet | number }}</td>
               <td>{{ row.estimation_oeufs | number }}</td>
               <td>{{ row.chiffre_affaire_total | number }}</td>

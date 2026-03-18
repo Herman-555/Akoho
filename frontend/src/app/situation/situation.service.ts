@@ -11,6 +11,8 @@ export interface Situation {
   nbr_oeufs: number;
   poids_moyen: number;
   estimation_poulet: number;
+  estimation_femelles?: number;
+  estimation_males?: number;
   estimation_oeufs: number;
   prix_achat_akoho: number;
   prix_sakafo: number;

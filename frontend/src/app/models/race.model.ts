@@ -3,6 +3,7 @@ export interface Race {
   nom_race: string | null;
   prix_achat: number | null;
   prix_vente: number | null;
+  prix_vente_male: number | null;
   prix_oeuf: number | null;
   prix_nourriture: number | null;
   male: number | null;

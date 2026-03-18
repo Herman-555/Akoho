@@ -19,7 +19,7 @@ class SituationService {
       .request()
       .input('id_lot', sql.Int, lotId)
       .query(`
-        SELECT l.nbr_poulet, l.id_couverture, l.date_creation, r.prix_achat, r.prix_vente, r.prix_oeuf, r.prix_nourriture, l.poids_initial, r.male AS male_pct, r.femelle AS femelle_pct
+        SELECT l.nbr_poulet, l.id_couverture, l.date_creation, r.prix_achat, r.prix_vente, r.prix_vente_male, r.prix_oeuf, r.prix_nourriture, l.poids_initial, r.male AS male_pct, r.femelle AS femelle_pct
         FROM lot l
         JOIN race r ON l.id_race = r.id_race
         WHERE l.id_lot = @id_lot
@@ -29,7 +29,7 @@ class SituationService {
       throw new Error('Lot non trouvé');
     }
 
-    const { nbr_poulet: initialChickenCount, id_couverture, prix_achat, prix_vente, prix_oeuf, prix_nourriture, date_creation, poids_initial, male_pct, femelle_pct } = lotData.recordset[0];
+    const { nbr_poulet: initialChickenCount, id_couverture, prix_achat, prix_vente, prix_vente_male, prix_oeuf, prix_nourriture, date_creation, poids_initial, male_pct, femelle_pct } = lotData.recordset[0];
 
     const creationDateKey = this.toUtcDateOnlyKey(date_creation);
     const consultationDateKey = this.toUtcDateOnlyKey(targetDate);
@@ -50,9 +50,12 @@ class SituationService {
     const perte = await this.oeufsService.calculatePerte(lotId, targetDate);
     const perteValeur = perte * prix_oeuf;
 
-    // Calculs de prix
-    const estimation_poulet_raw = Number(poids_moyen) * Number(nbr_poulet) * Number(prix_vente);
-    const estimation_poulet = Math.round(estimation_poulet_raw);
+    // Calculs de prix - séparation mâles et femelles
+    const estimation_femelles_raw = Number(poids_moyen) * Number(estimationOeufs.femelles_actuelles) * Number(prix_vente || 0);
+    const estimation_males_raw = Number(poids_moyen) * Number(estimationOeufs.males_actuels) * Number(prix_vente_male || 0);
+    const estimation_femelles = Math.round(estimation_femelles_raw);
+    const estimation_males = Math.round(estimation_males_raw);
+    const estimation_poulet = estimation_femelles + estimation_males;
 
     const estimation_oeufs = nbr_oeufs * prix_oeuf;
 
@@ -79,6 +82,8 @@ class SituationService {
       nbr_oeufs: nbr_oeufs,
       poids_moyen: Math.round(poids_moyen * 10000) / 10000,
       estimation_poulet: estimation_poulet,
+      estimation_femelles: estimation_femelles,
+      estimation_males: estimation_males,
       estimation_oeufs: Math.round(estimation_oeufs),
       prix_achat_akoho: Math.round(prix_achat_akoho),
       prix_sakafo: Math.round(prix_sakafo),

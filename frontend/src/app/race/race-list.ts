@@ -17,6 +17,7 @@ export class RaceListComponent implements OnInit {
   nomRace = '';
   prixAchat: number | null = null;
   prixVente: number | null = null;
+  prixVenteMale: number | null = null;
   prixOeuf: number | null = null;
   prixNourriture: number | null = null;
   male: number | null = null;
@@ -30,6 +31,7 @@ export class RaceListComponent implements OnInit {
   editNomRace = '';
   editPrixAchat: number | null = null;
   editPrixVente: number | null = null;
+  editPrixVenteMale: number | null = null;
   editPrixOeuf: number | null = null;
   editPrixNourriture: number | null = null;
   editMale: number | null = null;
@@ -56,11 +58,12 @@ export class RaceListComponent implements OnInit {
   onCreate(): void {
     this.error.set(null);
     if (!this.nomRace) { this.error.set('Veuillez saisir un nom'); return; }
-    this.raceService.create({ 
-      nom_race: this.nomRace, 
-      prix_achat: this.prixAchat, 
-      prix_vente: this.prixVente, 
-      prix_oeuf: this.prixOeuf, 
+    this.raceService.create({
+      nom_race: this.nomRace,
+      prix_achat: this.prixAchat,
+      prix_vente: this.prixVente,
+      prix_vente_male: this.prixVenteMale,
+      prix_oeuf: this.prixOeuf,
       prix_nourriture: this.prixNourriture,
       male: this.male,
       femelle: this.femelle,
@@ -75,6 +78,7 @@ export class RaceListComponent implements OnInit {
         this.nomRace = '';
         this.prixAchat = null;
         this.prixVente = null;
+        this.prixVenteMale = null;
         this.prixOeuf = null;
         this.prixNourriture = null;
         this.male = null;
@@ -94,6 +98,7 @@ export class RaceListComponent implements OnInit {
     this.editNomRace = race.nom_race ?? '';
     this.editPrixAchat = race.prix_achat;
     this.editPrixVente = race.prix_vente;
+    this.editPrixVenteMale = race.prix_vente_male;
     this.editPrixOeuf = race.prix_oeuf;
     this.editPrixNourriture = race.prix_nourriture;
     this.editMale = race.male;
@@ -111,11 +116,12 @@ export class RaceListComponent implements OnInit {
 
   onSaveEdit(id: number): void {
     this.error.set(null);
-    this.raceService.update(id, { 
-      nom_race: this.editNomRace, 
-      prix_achat: this.editPrixAchat, 
-      prix_vente: this.editPrixVente, 
-      prix_oeuf: this.editPrixOeuf, 
+    this.raceService.update(id, {
+      nom_race: this.editNomRace,
+      prix_achat: this.editPrixAchat,
+      prix_vente: this.editPrixVente,
+      prix_vente_male: this.editPrixVenteMale,
+      prix_oeuf: this.editPrixOeuf,
       prix_nourriture: this.editPrixNourriture,
       male: this.editMale,
       femelle: this.editFemelle,
